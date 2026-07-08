@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SafetyKleen Service Portal</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --navy:#001f5b;
+  --blue:#006dcc;
+  --yellow:#ffd200;
+  --bg:#f3f5f9;
+  --card:#ffffff;
+  --text:#001540;
+  --muted:#56627a;
+  --border:#d9e1ec;
+  --shadow:0 8px 24px rgba(0,0,0,.08);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.header{
+  background:var(--navy);
+  color:white;
+  padding:18px 32px 16px;
+  border-bottom:5px solid var(--yellow);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.sk-logo{
+  width:46px;
+  height:46px;
+  object-fit:contain;
+  flex-shrink:0;
+}
+
+.brand-title{
+  font-size:28px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:1px;
+}
+
+.brand-subtitle{
+  margin-top:3px;
+  font-size:13px;
+  color:var(--yellow);
+  font-weight:800;
+  letter-spacing:1.5px;
+}
+
+.container{
+  max-width:1130px;
+  margin:26px auto;
+  padding:0 18px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+  padding:18px;
+  margin-bottom:18px;
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.field{margin-bottom:14px}
+
+label{
+  display:block;
+  font-size:12px;
+  text-transform:uppercase;
+  font-weight:900;
+  color:var(--text);
+  margin-bottom:6px;
+}
+
+input,select,textarea{
+  width:100%;
+  padding:12px 13px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:14px;
+  background:white;
+  color:var(--text);
+}
+
+textarea{
+  min-height:105px;
+  resize:vertical;
+}
+
+.customer-results{
+  display:none;
+  margin-top:8px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+  background:white;
+}
+
+.customer-result{
+  padding:12px;
+  cursor:pointer;
+  border-bottom:1px solid var(--border);
+}
+
+.customer-result:hover{background:#eef5ff}
+.customer-result:last-child{border-bottom:none}
+
+.customer-card{
+  display:none;
+  background:white;
+  border-left:5px solid var(--blue);
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin-bottom:18px;
+}
+
+.request-types{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.type-card{
+  border:2px solid var(--border);
+  background:white;
+  border-radius:12px;
+  padding:18px 12px;
+  text-align:center;
+  cursor:pointer;
+  font-weight:900;
+  transition:.15s;
+}
+
+.type-card:hover{
+  transform:translateY(-2px);
+  border-color:var(--blue);
+}
+
+.type-card.active{
+  border-color:var(--blue);
+  background:#eef5ff;
+}
+
+.type-icon{
+  width:44px;
+  height:44px;
+  margin:0 auto 10px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--blue);
+  color:white;
+  font-size:21px;
+}
+
+.dynamic-section{display:none}
+
+.priority-box,.warning,.success{
+  display:none;
+  padding:14px;
+  border-radius:10px;
+  margin-bottom:14px;
+  font-weight:800;
+}
+
+.warning{
+  background:#fff7d7;
+  border-left:5px solid var(--yellow);
+}
+
+.success{
+  background:#e8f5ec;
+  border-left:5px solid #1f9d55;
+  color:#0b6b35;
+}
+
+.priority-critical{
+  background:#fde8e8;
+  border-left:5px solid #c62828;
+  color:#c62828;
+}
+
+.priority-high{
+  background:#fff1db;
+  border-left:5px solid #ef7d00;
+  color:#c86000;
+}
+
+.priority-normal{
+  background:#eaf3ff;
+  border-left:5px solid var(--blue);
+  color:var(--blue);
+}
+
+.priority-low{
+  background:#e8f5ec;
+  border-left:5px solid #1f9d55;
+  color:#0b6b35;
+}
+
+.summary-line{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 0;
+  border-bottom:1px solid var(--border);
+  font-size:14px;
+}
+
+.summary-line span:first-child{color:var(--muted)}
+
+.yellow-btn{
+  width:100%;
+  border:none;
+  border-radius:8px;
+  padding:13px;
+  font-weight:900;
+  cursor:pointer;
+  background:var(--yellow);
+  color:var(--text);
+}
+
+.hidden{display:none!important}
+
+.footer-note{
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+  margin:28px 0;
+}
+
+@media(max-width:900px){
+  .grid-2,.request-types{
+    grid-template-columns:1fr;
+  }
+
+  .brand-title{
+    font-size:25px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="brand">
+    <img class="sk-logo" src="./logo.png" alt="SafetyKleen logo">
+    <div>
+      <div class="brand-title">SAFETYKLEEN</div>
+      <div class="brand-subtitle">SERVICE PORTAL</div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="card">
+  <div class="grid-2">
+    <div class="field">
+      <label>Customer Search</label>
+      <input id="customerSearch" placeholder="Search customer, site, address or agreement..." autocomplete="off">
+      <div id="customerResults" class="customer-results"></div>
+    </div>
+
+    <div class="field">
+      <label>Submitted By</label>
+      <input id="submittedBy" readonly>
+    </div>
+  </div>
+
+  <div id="customerCard" class="customer-card"></div>
+
+<!-- REQUEST TYPE -->
+<div class="field">
+  <label>Request Type</label>
+
+  <div class="request-types">
+    <div class="type-card" data-type="Machine Breakdown">
+      <div class="type-icon">🛠</div>
+      Machine Breakdown
+    </div>
+
+    <div class="type-card" data-type="Risk">
+      <div class="type-icon">⚠</div>
+      Risk
+    </div>
+
+    <div class="type-card" data-type="Finance Request">
+      <div class="type-icon">€</div>
+      Finance Request
+    </div>
+
+    <div class="type-card" data-type="Other">
+      <div class="type-icon">✉</div>
+      Other
+    </div>
+  </div>
+</div>
+
+<!-- MACHINE BREAKDOWN FIELDS -->
+<div id="machineBreakdownForm" class="dynamic-section">
+
+  <h2>Machine Breakdown</h2>
+
+  <div class="field">
+    <label>Would you like to receive a confirmation email?</label>
+    <select id="confirmationRequired">
+      <option value="">Select...</option>
+      <option>Yes</option>
+      <option>No</option>
+    </select>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label>Phone number to be called on for the breakdown</label>
+      <input id="phoneNumber" placeholder="Enter phone number">
+    </div>
+
+    <div class="field">
+      <label>Contact person on site</label>
+      <input id="contactPerson" placeholder="Enter contact person">
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label>Machine type</label>
+      <select id="machineSelect">
+        <option value="">Select machine...</option>
+        <option>M100</option>
+        <option>M102</option>
+        <option>M104</option>
+        <option>M105</option>
+        <option>M110</option>
+        <option>M115</option>
+        <option>M172</option>
+        <option>M190</option>
+        <option>M194</option>
+        <option>M195</option>
+        <option>M205</option>
+        <option>M212</option>
+        <option>M267</option>
+        <option>M270</option>
+        <option>M280</option>
+        <option>M302</option>
+        <option>M312</option>
+        <option>M315</option>
+        <option>M316</option>
+        <option>M320</option>
+        <option>M440</option>
+        <option>M447</option>
+        <option>M713</option>
+        <option>M720</option>
+        <option>M730</option>
+        <option>M746</option>
+        <option>M765</option>
+        <option>M774</option>
+        <option>M905</option>
+        <option>M915</option>
+        <option>M950</option>
+        <option>SK75N</option>
+        <option>SK150</option>
+        <option>SK300</option>
+        <option>SK400</option>
+        <option>SK600</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Machine serial / asset number</label>
+      <input id="assetNumber" placeholder="Enter serial or asset number">
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label>Issue</label>
+      <select id="issueSelect">
+        <option value="">Select issue...</option>
+        <option>Leakage</option>
+        <option>Electrical</option>
+        <option>Pump</option>
+        <option>Consumables</option>
+        <option>Additional service required</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Issue detail</label>
+      <select id="issueDetailSelect">
+        <option value="">Select issue first...</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="priorityBox" class="priority-box"></div>
+
+  <div class="field">
+    <label>Comments</label>
+    <textarea id="comments" placeholder="Add additional information..."></textarea>
+  </div>
+
+  <div class="field">
+    <label>Pictures</label>
+    <input type="file" id="photos" accept="image/*" multiple capture="environment">
+  </div>
+
+</div>
+
+<section id="machineBreakdownForm" class="card dynamic-section">
+  <h2 style="margin-top:0">Machine Breakdown</h2>
+
+  <div id="duplicateWarning" class="warning">
+    Possible duplicate detected: an open breakdown may already exist for this customer or machine.
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label>Contact Person On Site</label>
+      <input id="contactPerson" placeholder="Contact person">
+    </div>
+
+    <div class="field">
+      <label>Phone Number To Call Back</label>
+      <input id="phoneNumber" placeholder="Phone number">
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label>Machine</label>
+      <select id="machineSelect">
+        <option value="">Select customer first...</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Asset / Serial Number</label>
+      <input id="assetNumber" placeholder="Auto-filled if available">
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label>Issue</label>
+      <select id="issueSelect">
+        <option value="">Select issue...</option>
+        <option>Leakage</option>
+        <option>Electrical</option>
+        <option>Pump</option>
+        <option>Consumables</option>
+        <option>Additional service required</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Issue Detail</label>
+      <select id="issueDetailSelect">
+        <option value="">Select issue first...</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="otherIssueField" class="field hidden">
+    <label>Other Issue Detail</label>
+    <input id="otherIssueText" placeholder="Describe the issue">
+  </div>
+
+  <div id="priorityBox" class="priority-box"></div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label>Priority</label>
+      <select id="prioritySelect">
+        <option value="">Auto-suggested or select manually...</option>
+        <option>Critical - production stopped</option>
+        <option>High</option>
+        <option>Normal</option>
+        <option>Low</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Confirmation After Repair Required?</label>
+      <select id="confirmationRequired">
+        <option value="">Select...</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Comments</label>
+    <textarea id="comments" placeholder="Add useful operational information..."></textarea>
+  </div>
+
+  <div class="field">
+    <label>Photos</label>
+    <input type="file" id="photos" accept="image/*" multiple capture="environment">
+  </div>
+</section>
+
+<section id="riskForm" class="card dynamic-section">
+  <h2 style="margin-top:0">Risk</h2>
+
+  <div class="field">
+    <label>Risk Type</label>
+    <select id="riskType">
+      <option value="">Select...</option>
+      <option>Cancellation risk</option>
+      <option>Price complaint</option>
+      <option>Competitor offer</option>
+      <option>Service dissatisfaction</option>
+      <option>Contract discussion</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Risk Description</label>
+    <textarea id="riskDescription"></textarea>
+  </div>
+</section>
+
+<section id="financeForm" class="card dynamic-section">
+  <h2 style="margin-top:0">Finance Request</h2>
+
+  <div class="field">
+    <label>Finance Request Type</label>
+    <select id="financeType">
+      <option value="">Select...</option>
+      <option>Invoice dispute</option>
+      <option>Credit note request</option>
+      <option>Payment allocation</option>
+      <option>Double payment</option>
+      <option>Customer statement</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Finance Details</label>
+    <textarea id="financeDescription"></textarea>
+  </div>
+</section>
+
+<section id="otherForm" class="card dynamic-section">
+  <h2 style="margin-top:0">Other Request</h2>
+
+  <div class="field">
+    <label>Request Description</label>
+    <textarea id="otherDescription"></textarea>
+  </div>
+</section>
+
+<section class="card">
+  <h2 style="margin-top:0">Request Summary</h2>
+
+  <div class="summary-line"><span>Customer</span><strong id="summaryCustomer">-</strong></div>
+  <div class="summary-line"><span>Site</span><strong id="summarySite">-</strong></div>
+  <div class="summary-line"><span>Request Type</span><strong id="summaryType">-</strong></div>
+  <div class="summary-line"><span>Machine</span><strong id="summaryMachine">-</strong></div>
+  <div class="summary-line"><span>Issue</span><strong id="summaryIssue">-</strong></div>
+  <div class="summary-line"><span>Priority</span><strong id="summaryPriority">-</strong></div>
+  <div class="summary-line"><span>Routing</span><strong id="summaryRouting">-</strong></div>
+
+  <br>
+  <button id="submitBtn" class="yellow-btn">Submit Request</button>
+
+  <div id="successMessage" class="success">
+    Request created successfully.
+  </div>
+</section>
+
+<div class="footer-note">
+  SafetyKleen Service Portal — internal operational request intake.
+</div>
+
+</main>
+
+<script>
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let selectedCustomer = null;
+let selectedRequestType = "";
+let customerMachines = [];
+
+const fallbackCustomers = [
+  {
+    id:"1",
+    customer:"Toyota Belgium",
+    service_site:"Brussels",
+    address:"Brussels",
+    agreement_number:"AGR-201547",
+    interval:"4 weeks",
+    business_phone:"02 xxx xx xx",
+    account_manager:"Account Manager",
+    machines:[
+      {model:"M315", asset:"15145"},
+      {model:"M102", asset:"15478"},
+      {model:"SK300", asset:"17110"}
+    ]
+  },
+  {
+    id:"2",
+    customer:"Turbotrucks Brugge",
+    service_site:"Brugge",
+    address:"Brugge",
+    agreement_number:"AGR-200845",
+    interval:"6 weeks",
+    business_phone:"",
+    account_manager:"Account Manager",
+    machines:[
+      {model:"M100", asset:"14578"},
+      {model:"M157", asset:"16200"}
+    ]
+  }
+];
+
+const issueDetails = {
+  "Leakage": [
+    "Mechanical problem",
+    "Preventive solution",
+    "Problem with flushing system",
+    "Problem with the basket / tray",
+    "Reservoir leak",
+    "Spray gun leak",
+    "Structural damage",
+    "Other"
+  ],
+  "Electrical": [
+    "Machine does not start",
+    "No power",
+    "Fuse trips",
+    "Display off",
+    "Heating issue",
+    "Alarm message",
+    "Other"
+  ],
+  "Pump": [
+    "Pump does not run",
+    "Low pressure",
+    "No circulation",
+    "Strange noise",
+    "Pump running continuously",
+    "Other"
+  ],
+  "Consumables": [
+    "Gloves",
+    "Brush",
+    "Spray gun",
+    "Filter",
+    "Hose",
+    "Other"
+  ],
+  "Additional service required": [
+    "Extra cleaning required",
+    "Preventive maintenance",
+    "Machine relocation",
+    "Training required",
+    "Other"
+  ],
+  "Other": [
+    "Other"
+  ]
+};
+
+function selectRequestType(type){
+  selectedRequestType = type;
+
+  document.querySelectorAll(".type-card").forEach(card => {
+    card.classList.toggle("active", card.dataset.type === type);
+  });
+
+  document.querySelectorAll(".dynamic-section").forEach(section => {
+    section.style.display = "none";
+  });
+
+  if(type === "Machine Breakdown"){
+    machineBreakdownForm.style.display = "block";
+  }
+
+  if(type === "Risk"){
+    riskForm.style.display = "block";
+  }
+
+  if(type === "Finance Request"){
+    financeForm.style.display = "block";
+  }
+
+  if(type === "Other"){
+    otherForm.style.display = "block";
+  }
+}
+
+function updateIssueDetails(){
+  const issue = issueSelect.value;
+  issueDetailSelect.innerHTML = `<option value="">Select detail...</option>`;
+
+  if(!issue) return;
+
+  issueDetails[issue].forEach(detail => {
+    const option = document.createElement("option");
+    option.value = detail;
+    option.textContent = detail;
+    issueDetailSelect.appendChild(option);
+  });
+}
+
+issueSelect.addEventListener("change", updateIssueDetails);
+const userName = localStorage.getItem("sk_user_name") || "Current User";
+submittedBy.value = userName;
+
+async function searchCustomers(query){
+  if(!query || query.length < 2){
+    customerResults.style.display = "none";
+    return;
+  }
+
+  let customers = [];
+
+  try{
+    const { data, error } = await supabaseClient
+      .from("customers")
+      .select("*")
+      .or(`customer.ilike.%${query}%,service_site.ilike.%${query}%,address.ilike.%${query}%,agreement_number.ilike.%${query}%`)
+      .limit(8);
+
+    customers = !error && data?.length ? data : fallbackSearch(query);
+  }catch{
+    customers = fallbackSearch(query);
+  }
+
+  renderCustomerResults(customers);
+}
+
+function fallbackSearch(query){
+  return fallbackCustomers.filter(c =>
+    `${c.customer} ${c.service_site} ${c.address} ${c.agreement_number}`
+      .toLowerCase()
+      .includes(query.toLowerCase())
+  );
+}
+
+function renderCustomerResults(customers){
+  customerResults.innerHTML = "";
+
+  if(!customers.length){
+    customerResults.style.display = "none";
+    return;
+  }
+
+  customers.forEach(customer => {
+    const div = document.createElement("div");
+    div.className = "customer-result";
+    div.innerHTML = `<strong>${customer.customer}</strong><br><small>${customer.service_site || ""} — ${customer.agreement_number || ""}</small>`;
+    div.onclick = () => selectCustomer(customer);
+    customerResults.appendChild(div);
+  });
+
+  customerResults.style.display = "block";
+}
+
+async function selectCustomer(customer){
+  selectedCustomer = customer;
+
+  customerSearch.value = `${customer.customer} - ${customer.service_site || ""}`;
+  customerResults.style.display = "none";
+
+  customerCard.style.display = "block";
+  customerCard.innerHTML = `
+    <strong>${customer.customer || ""}</strong><br>
+    ${customer.service_site || ""}<br><br>
+    Agreement: ${customer.agreement_number || "-"}<br>
+    Interval: ${customer.interval || "-"}<br>
+    Phone: ${customer.business_phone || "-"}<br>
+    Account Manager: ${customer.account_manager || "-"}
+  `;
+
+  phoneNumber.value = customer.business_phone || "";
+  summaryCustomer.textContent = customer.customer || "-";
+  summarySite.textContent = customer.service_site || "-";
+
+  await loadMachines(customer);
+  await checkDuplicate();
+}
+
+async function loadMachines(customer){
+  customerMachines = [];
+  machineSelect.innerHTML = `<option value="">Select machine...</option>`;
+
+  try{
+    const { data, error } = await supabaseClient
+      .from("machines")
+      .select("*")
+      .eq("customer_id", customer.id);
+
+    if(!error && data?.length){
+      customerMachines = data.map(m => ({
+        model:m.machine_model || m.model,
+        asset:m.asset_number || m.asset
+      }));
+    }else{
+      customerMachines = customer.machines || [];
+    }
+  }catch{
+    customerMachines = customer.machines || [];
+  }
+
+  if(!customerMachines.length){
+    machineSelect.innerHTML = `<option value="">No installed machine found</option>`;
+    return;
+  }
+
+  customerMachines.forEach(machine => {
+    const option = document.createElement("option");
+    option.value = machine.asset || machine.model;
+    option.textContent = `${machine.model || ""} - Asset ${machine.asset || "N/A"}`;
+    machineSelect.appendChild(option);
+  });
+}
+
+function selectRequestType(type){
+  selectedRequestType = type;
+
+  document.querySelectorAll(".type-card").forEach(card => {
+    card.classList.toggle("active", card.dataset.type === type);
+  });
+
+  document.querySelectorAll(".dynamic-section").forEach(section => {
+    section.style.display = "none";
+  });
+
+  if(type === "Machine Breakdown") machineBreakdownForm.style.display = "block";
+  if(type === "Risk") riskForm.style.display = "block";
+  if(type === "Finance Request") financeForm.style.display = "block";
+  if(type === "Other") otherForm.style.display = "block";
+
+  summaryType.textContent = type;
+  summaryRouting.textContent = getRouting(type);
+}
+
+function getRouting(type){
+  if(type === "Machine Breakdown") return "Customer Service / Operations";
+  if(type === "Risk") return "Retention";
+  if(type === "Finance Request") return "Finance";
+  return "Customer Service";
+}
+
+function updateIssueDetails(){
+  const issue = issueSelect.value;
+  issueDetailSelect.innerHTML = `<option value="">Select detail...</option>`;
+
+  if(!issue) return;
+
+  issueDetails[issue].forEach(detail => {
+    const option = document.createElement("option");
+    option.value = detail;
+    option.textContent = detail;
+    issueDetailSelect.appendChild(option);
+  });
+
+  otherIssueField.classList.toggle("hidden", issue !== "Other");
+  summaryIssue.textContent = issue;
+}
+
+function suggestPriority(){
+  const issue = issueSelect.value;
+  const detail = issueDetailSelect.value;
+  let priority = "";
+  let css = "";
+
+  if(["Machine won't start","No power","No circulation"].includes(detail)){
+    priority = "Critical - production stopped";
+    css = "priority-critical";
+  }else if(issue === "Leakage" || ["Solvent leaking","Pump leaking","Low pressure"].includes(detail)){
+    priority = "High";
+    css = "priority-high";
+  }else if(issue === "Consumables" || ["Gloves","Brush","Filter"].includes(detail)){
+    priority = "Low";
+    css = "priority-low";
+  }else if(issue && detail){
+    priority = "Normal";
+    css = "priority-normal";
+  }
+
+  if(!priority){
+    priorityBox.style.display = "none";
+    return;
+  }
+
+  prioritySelect.value = priority;
+  summaryPriority.textContent = priority;
+  priorityBox.className = `priority-box ${css}`;
+  priorityBox.style.display = "block";
+  priorityBox.textContent = `Suggested priority: ${priority}`;
+}
+
+async function checkDuplicate(){
+  duplicateWarning.style.display = "none";
+
+  if(!selectedCustomer) return;
+
+  try{
+    const { data, error } = await supabaseClient
+      .from("requests")
+      .select("*")
+      .eq("customer_id", selectedCustomer.id)
+      .eq("request_type", "Machine Breakdown")
+      .neq("status", "Closed")
+      .limit(1);
+
+    if(!error && data?.length) duplicateWarning.style.display = "block";
+  }catch{}
+}
+
+async function submitRequest(){
+  if(!selectedCustomer) return alert("Please select a customer.");
+  if(!selectedRequestType) return alert("Please select a request type.");
+
+  const selectedMachine = customerMachines.find(m => String(m.asset) === String(machineSelect.value));
+
+  const payload = {
+    customer_id:selectedCustomer.id,
+    customer_name:selectedCustomer.customer,
+    service_site:selectedCustomer.service_site,
+    submitted_by:submittedBy.value,
+    request_type:selectedRequestType,
+    machine_type:selectedMachine?.model || null,
+    asset_number:assetNumber.value,
+    issue:issueSelect.value,
+    issue_detail:issueDetailSelect.value,
+    priority:prioritySelect.value,
+    phone_number:phoneNumber.value,
+    comments:comments.value,
+    status:"New",
+    request_data:{
+      contact_person:contactPerson.value,
+      confirmation_required:confirmationRequired.value,
+      routing:getRouting(selectedRequestType),
+      risk_type:riskType?.value || null,
+      risk_description:riskDescription?.value || null,
+      finance_type:financeType?.value || null,
+      finance_description:financeDescription?.value || null,
+      other_description:otherDescription?.value || null
+    }
+  };
+
+  try{
+    const { error } = await supabaseClient.from("requests").insert([payload]);
+
+    if(error){
+      console.error(error);
+      return alert("Request could not be saved. Check Supabase settings.");
+    }
+
+    successMessage.style.display = "block";
+  }catch{
+    successMessage.style.display = "block";
+  }
+}
+
+customerSearch.addEventListener("input", e => searchCustomers(e.target.value));
+
+document.querySelectorAll(".type-card").forEach(card => {
+  card.addEventListener("click", () => selectRequestType(card.dataset.type));
+});
+
+machineSelect.addEventListener("change", e => {
+  const machine = customerMachines.find(m => String(m.asset) === String(e.target.value));
+
+  if(machine){
+    assetNumber.value = machine.asset || "";
+    summaryMachine.textContent = `${machine.model} - ${machine.asset || ""}`;
+  }
+
+  checkDuplicate();
+});
+
+issueSelect.addEventListener("change", () => {
+  updateIssueDetails();
+  suggestPriority();
+});
+
+issueDetailSelect.addEventListener("change", suggestPriority);
+
+prioritySelect.addEventListener("change", e => {
+  summaryPriority.textContent = e.target.value || "-";
+});
+
+submitBtn.addEventListener("click", submitRequest);
+</script>
+
+</body>
+</html>
